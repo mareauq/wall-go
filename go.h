@@ -39,4 +39,4 @@ unsigned int dist(unsigned int pos1[2], unsigned int pos2[2]);
 
 
 
-#endif
+#endif /* ! GO_H */
