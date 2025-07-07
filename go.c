@@ -4,9 +4,7 @@
 
 #include "go.h"
 
-/* Elementary functions */
-
-// Initialization 
+/* I - Elementary functions */
 
 struct board* init_board(size_t size)
 {
@@ -153,21 +151,8 @@ void print_board(struct board* board)
                     }
                 }
                 else
-                    printf("     ");
+                    printf("    ");
             }
-            // if (board->data[i][j]->east && !(board->data[i][j]->occ))
-            // {
-            //     printf("    |");
-            // }
-            // else if (board->data[i][j]->east && board->data[i][j]->occ)
-            // {
-            //     if (board->data[i][j]->color = 1)
-            //     {
-
-            //     }
-            // }
-            // else
-            //     printf("     ");
         }
         printf("\n");
         printf("    ");
@@ -182,28 +167,228 @@ void print_board(struct board* board)
     }
 }
 
-bool add_piece(struct board* board, unsigned int pos[2], unsigned int color)
+/* II - Pieces management */
+
+bool add_piece(struct board* board, size_t pos[2], int color)
 {
-    bool setup = false;
+    if (pos[0] >= board->size ||pos[1] >= board->size)
+    {
+        printf("Invalid position\n");
+        return false;
+    }
+    if (board->data[pos[0]][pos[1]]->occ)
+    {
+        printf("Position unavailable\n");
+        return false;
+    }
+    board->data[pos[0]][pos[1]]->occ = true;
+    board->data[pos[0]][pos[1]]->color = color;
+    return true;
 }
 
+// size_t dist(size_t pos1[2], size_t pos2[2]) // Obsolete
+// {
+//     size_t dist_x;
+//     size_t dist_y;
+//     if (pos1[0] < pos2[0])
+//         dist_x = pos2[0] - pos1[0];
+//     else
+//         dist_x = pos1[0] - pos2[0];
+//     if (pos1[1] < pos2[1])
+//         dist_y = pos2[1] - pos1[1];
+//     else
+//         dist_y = pos1[1] - pos2[1];
+//     return dist_x + dist_y;
+// }
+
+bool move_piece(struct board* board, size_t pos[2], int direction, int color)
+{
+    if (pos[0] >= board->size || pos[1] >= board->size || board->data[pos[0]][pos[1]]->color != color)
+    {
+        printf("Choose a valid starting position\n");
+        return false;
+    }
+    if (direction == 0) // Moving toward north
+    {
+        if (pos[0] == 0)
+        {
+            printf("Choose a valid goal position\n");
+            return false;
+        }
+        if (board->data[pos[0]][pos[1]]->north)
+        {
+            printf("A wall prevents you from moving\n");
+            return false;
+        }
+        if (board->data[pos[0]- 1][pos[1]]->occ)
+        {
+            printf("Choose an unoccupied goal position\n");
+            return false;
+        }
+        board->data[pos[0]][pos[1]]->color = 0;
+        board->data[pos[0]][pos[1]]->occ = false;
+        board->data[pos[0] - 1][pos[1]]->color = color;
+        board->data[pos[0] - 1][pos[1]]->occ = true;
+        return true;
+    }
+
+    if (direction == 1) // Moving toward east
+    {
+        if (pos[1] == board->size - 1)
+        {
+            printf("Choose a valid goal position\n");
+            return false;
+        }
+        if (board->data[pos[0]][pos[1]]->east)
+        {
+            printf("A wall prevents you from moving\n");
+            return false;
+        }
+        if (board->data[pos[0]][pos[1] + 1]->occ)
+        {
+            printf("Choose an unoccupied goal position\n");
+            return false;
+        }
+        board->data[pos[0]][pos[1]]->color = 0;
+        board->data[pos[0]][pos[1]]->occ = false;
+        board->data[pos[0]][pos[1] + 1]->color = color;
+        board->data[pos[0]][pos[1] + 1]->occ = true;
+        return true;
+    }
+    
+    if (direction == 2) // Moving toward south
+    {
+        if (pos[0] == board->size - 1)
+        {
+            printf("Choose a valid goal position\n");
+            return false;
+        }
+        if (board->data[pos[0]][pos[1]]->south)
+        {
+            printf("A wall prevents you from moving\n");
+            return false;
+        }
+        if (board->data[pos[0] + 1][pos[1]]->occ)
+        {
+            printf("Choose an unoccupied goal position\n");
+            return false;
+        }
+        board->data[pos[0]][pos[1]]->color = 0;
+        board->data[pos[0]][pos[1]]->occ = false;
+        board->data[pos[0] + 1][pos[1]]->color = color;
+        board->data[pos[0] + 1][pos[1]]->occ = true;
+        return true;
+    }
+
+    if (direction == 3) // Moving toward west
+    {
+        if (pos[1] == 0)
+        {
+            printf("Choose a valid goal position\n");
+            return false;
+        }
+        if (board->data[pos[0]][pos[1]]->west)
+        {
+            printf("A wall prevents you from moving\n");
+            return false;
+        }
+        if (board->data[pos[0]][pos[1] - 1]->occ)
+        {
+            printf("Choose an unoccupied goal position\n");
+            return false;
+        }
+        board->data[pos[0]][pos[1]]->color = 0;
+        board->data[pos[0]][pos[1]]->occ = false;
+        board->data[pos[0]][pos[1] - 1]->color = color;
+        board->data[pos[0]][pos[1] - 1]->occ = true;
+        return true;
+    }
+    printf("Give a valid direction\n");
+    return false;
+}
+
+/* III - Walls */
+
+bool add_wall(struct board* board, size_t pos[2], int direction, int color)
+{
+    if (pos[0] >= board->size || pos[1] >= board->size || board->data[pos[0]][pos[1]]->color != color)
+    {
+        printf("Choose a valid square to set a wall\n");
+        return false;
+    }
+    if (direction == 0) // Wall toward north
+    {
+        if (board->data[pos[0]][pos[1]]->north)
+        {
+            printf("There is already a wall there\n");
+            return false;
+        }
+        board->data[pos[0]][pos[1]]->north = true;
+        adjust_walls(board);
+        return true;
+    }
+
+    if (direction == 1) // Wall toward east
+    {
+        if (board->data[pos[0]][pos[1]]->east)
+        {
+            printf("There is already a wall there\n");
+            return false;
+        }
+        board->data[pos[0]][pos[1]]->east = true;
+        adjust_walls(board);
+        return true;
+    }
+
+    if (direction == 2) // Wall toward south
+    {
+        if (board->data[pos[0]][pos[1]]->south)
+        {
+            printf("There is already a wall there\n");
+            return false;
+        }
+        board->data[pos[0]][pos[1]]->south = true;
+        adjust_walls(board);
+        return true;
+    }
+    if (direction == 3) // Wall toward north
+    {
+        if (board->data[pos[0]][pos[1]]->west)
+        {
+            printf("There is already a wall there\n");
+            return false;
+        }
+        board->data[pos[0]][pos[1]]->west = true;
+        adjust_walls(board);
+        return true;
+    }
+    printf("Give a valid direction\n");
+    return false;
+}
+
+/* Test zone */
 int main()
 {
     struct board* board = init_board(4);
     init_walls(board);
-    for (size_t i = 0; i < board->size; i++)
+    // size_t pos1[2] = {1,2};
+    // size_t pos2[2] = {3,3};
+    // add_piece(board, pos1, 1);
+    // add_piece(board, pos1, 1);
+    // add_piece(board, pos2, 2);
+    for (size_t j = 0; j < board->size; j++)
     {
-        for (size_t j = 0; j < board->size; j++)
-        {
-            board->data[i][j]->east = true;
-            board->data[i][j]->north = true;
-            board->data[i][j]->west = true;
-            board->data[i][j]->south = true;
-            board->data[(2*i + 3)%board->size][(2*j)%board->size]->occ = true;
-            board->data[(2*i + 3)%board->size][(2*j)%board->size]->color = 2;
-        }
-    printf("%d\n", board->data[i][board->size - 1]->east);
+        size_t pos[2] = {j, j};
+        // size_t pos2[2] = {2, j};
+        add_piece(board, pos, 1);
+        // add_piece(board, pos2, 2);
     }
+    print_board(board);
+    size_t pos[2] = {0,0};
+    size_t pos2[2] = {0,1};
+    move_piece(board, pos, 1, 1);
+    add_wall(board, pos2, 3, 2);
+    move_piece(board, pos2, 3, 2);
     print_board(board);
     return 0;
 }

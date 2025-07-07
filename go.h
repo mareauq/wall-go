@@ -11,14 +11,14 @@
 
 struct square
 {
-    unsigned int pos[2];
+    size_t pos[2];
     // Bools for walls
     bool north;
     bool east;
     bool south;
     bool west;
     bool occ; /* Is the frame occupied */
-    unsigned int color; /* 0 if empty, 1 if black, 2 if white*/
+    int color; /* 0 if empty, 1 if black, 2 if white*/
 };
 
 struct board
@@ -27,15 +27,17 @@ struct board
     size_t size;
 };
 
+// Directions : 0 -> north, 1 -> east, 2 -> south, 3 -> west
+
 /* Prototypes */
 
 struct board* init_board(size_t size);
 void print_board(struct board* board);
 void init_walls(struct board* board);
 void adjust_walls(struct board* board);
-bool add_piece(struct board* board, unsigned int pos[2], unsigned int color);
-bool move_piece(struct board* board, unsigned int pos[2], unsigned int next_pos[2], unsigned int color);
-unsigned int dist(unsigned int pos1[2], unsigned int pos2[2]);
+bool add_piece(struct board* board, size_t pos[2], int color);
+bool move_piece(struct board* board, size_t pos[2], int direction, int color);
+//size_t dist(size_t pos1[2], size_t pos2[2]); // Obsolete
 
 
 
