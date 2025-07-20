@@ -49,8 +49,8 @@ struct board* init_board(size_t size)
                 return NULL;
             }
             board->data[i][j] = square;
-            board->data[i][j]->pos[0] = i;
-            board->data[i][j]->pos[1] = j;
+            board->data[i][j]->pos[0] = X_GAP + i * SQUARE_SIZE;
+            board->data[i][j]->pos[1] = Y_GAP + j * SQUARE_SIZE;
             board->data[i][j]->color = 0;
             board->data[i][j]->occ = false;
             board->data[i][j]->walls[NORTH] = false;
@@ -125,13 +125,21 @@ void print_board(struct board* board)
             {
                 if (board->data[i][j]->occ)
                 {
-                    if (board->data[i][j]->color == 1)
+                    if (board->data[i][j]->color == BLUE)
                     {
                         printf(" B |");
                     }
-                    if (board->data[i][j]->color == 2)
+                    if (board->data[i][j]->color == RED)
                     {
-                        printf(" W |");
+                        printf(" R |");
+                    }
+                    if (board->data[i][j]->color == GREEN)
+                    {
+                        printf(" G |");
+                    }
+                    if (board->data[i][j]->color == YELLOW)
+                    {
+                        printf(" Y |");
                     }
                 }
                 else
@@ -141,13 +149,21 @@ void print_board(struct board* board)
             {
                 if (board->data[i][j]->occ)
                 {
-                    if (board->data[i][j]->color == 1)
+                    if (board->data[i][j]->color == BLUE)
                     {
                         printf(" B  ");
                     }
-                    if (board->data[i][j]->color == 2)
+                    if (board->data[i][j]->color == RED)
                     {
-                        printf(" W  ");
+                        printf(" R  ");
+                    }
+                    if (board->data[i][j]->color == GREEN)
+                    {
+                        printf(" G  ");
+                    }
+                    if (board->data[i][j]->color == YELLOW)
+                    {
+                        printf(" Y  ");
                     }
                 }
                 else
