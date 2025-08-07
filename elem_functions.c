@@ -1,4 +1,4 @@
-/*              GO BLOQUEUR              */
+/*              Wall Go             */
 
 /*                HEADERS          */ 
 
@@ -24,7 +24,9 @@ struct board* init_board(size_t size)
         if (!row_squares) // Errors management
         {
             for (size_t k = 0; k < i; k++)
-                free(board->data[i]);
+            {
+                free(board->data[k]);
+            }
             free(board->data);
             free(board);
             return NULL;
@@ -49,14 +51,18 @@ struct board* init_board(size_t size)
                 return NULL;
             }
             board->data[i][j] = square;
-            board->data[i][j]->pos[0] = X_GAP + i * SQUARE_SIZE;
-            board->data[i][j]->pos[1] = Y_GAP + j * SQUARE_SIZE;
+            board->data[i][j]->pos[0] = X_GAP + j * SQUARE_SIZE;
+            board->data[i][j]->pos[1] = Y_GAP + i * SQUARE_SIZE;
             board->data[i][j]->color = 0;
             board->data[i][j]->occ = false;
             board->data[i][j]->walls[NORTH] = false;
             board->data[i][j]->walls[EAST] = false;
             board->data[i][j]->walls[SOUTH] = false;
             board->data[i][j]->walls[WEST] = false;
+            board->data[i][j]->walls_color[NORTH] = BLUE; // Default color, must be modified if wall is displayed
+            board->data[i][j]->walls_color[EAST] = BLUE; // Default color, must be modified if wall is displayed
+            board->data[i][j]->walls_color[SOUTH] = BLUE; // Default color, must be modified if wall is displayed
+            board->data[i][j]->walls_color[WEST] = BLUE; // Default color, must be modified if wall is displayed
         }
     }
     return board;
@@ -76,6 +82,27 @@ void init_walls(struct board* board)
     }
 }
 
+void reset_board(struct board* board)
+{
+    for (size_t i = 0; i < board->size; i++)
+    {
+        for (size_t j = 0; j < board->size; j++)
+        {
+            board->data[i][j]->color = 0;
+            board->data[i][j]->occ = false;
+            board->data[i][j]->walls[NORTH] = false;
+            board->data[i][j]->walls[EAST] = false;
+            board->data[i][j]->walls[SOUTH] = false;
+            board->data[i][j]->walls[WEST] = false;
+            board->data[i][j]->walls_color[NORTH] = BLUE; 
+            board->data[i][j]->walls_color[EAST] = BLUE; 
+            board->data[i][j]->walls_color[SOUTH] = BLUE; 
+            board->data[i][j]->walls_color[WEST] = BLUE;
+        }
+    }
+    init_walls(board);
+}
+
 void adjust_walls(struct board* board)
 {
     for (size_t i = 0; i < board->size; i++)
@@ -85,22 +112,37 @@ void adjust_walls(struct board* board)
             if (i < board->size - 1)
             {
                 if (board->data[i][j]->walls[SOUTH])
+                {
                     board->data[i+1][j]->walls[NORTH] = true;
+                    board->data[i+1][j]->walls_color[NORTH] = board->data[i][j]->walls_color[SOUTH];
+                }
             }
             if (i > 0)
             {
                 if (board->data[i][j]->walls[NORTH])
+                {
                     board->data[i-1][j]->walls[SOUTH] = true;
+                    board->data[i-1][j]->walls_color[SOUTH] = board->data[i][j]->walls_color[NORTH];
+                }
+
             }
             if (j < board->size - 1)
             {
                 if (board->data[i][j]->walls[EAST])
+                {
                     board->data[i][j+1]->walls[WEST] = true;
+                    board->data[i][j+1]->walls_color[WEST] = board->data[i][j]->walls_color[EAST];
+                }
+
             }
             if (j > 0)
             {
                 if (board->data[i][j]->walls[WEST])
+                {
                     board->data[i][j-1]->walls[EAST] = true;
+                    board->data[i][j-1]->walls_color[EAST] = board->data[i][j]->walls_color[WEST];
+                }
+
             }
         }
     }
@@ -183,9 +225,23 @@ void print_board(struct board* board)
     }
 }
 
+void free_board(struct board* board)
+{
+    for (size_t i = 0; i < board->size; i++)
+    {
+        for (size_t j = 0; j < board->size; j++)
+        {
+            free(board->data[i][j]);
+        }
+        free(board->data[i]);
+    }
+    free(board->data);
+    free(board);
+}
+
 /* II - Pieces management */
 
-bool add_piece(struct board* board, size_t pos[2], int color)
+bool add_piece(struct board* board, Sint32 pos[2], int color)
 {
     if (pos[0] >= board->size ||pos[1] >= board->size)
     {
@@ -202,24 +258,66 @@ bool add_piece(struct board* board, size_t pos[2], int color)
     return true;
 }
 
-// size_t dist(size_t pos1[2], size_t pos2[2]) // Obsolete
-// {
-//     size_t dist_x;
-//     size_t dist_y;
-//     if (pos1[0] < pos2[0])
-//         dist_x = pos2[0] - pos1[0];
-//     else
-//         dist_x = pos1[0] - pos2[0];
-//     if (pos1[1] < pos2[1])
-//         dist_y = pos2[1] - pos1[1];
-//     else
-//         dist_y = pos1[1] - pos2[1];
-//     return dist_x + dist_y;
-// }
-
-size_t* next_pos(size_t pos[2], enum Directions direction)
+Sint32 dist(Sint32 pos1[2], Sint32 pos2[2]) // Obsolete
 {
-    size_t* nextpos = malloc(2*sizeof(size_t));
+    Sint32 dist_x;
+    Sint32 dist_y;
+    if (pos1[0] < pos2[0])
+        dist_x = pos2[0] - pos1[0];
+    else
+        dist_x = pos1[0] - pos2[0];
+    if (pos1[1] < pos2[1])
+        dist_y = pos2[1] - pos1[1];
+    else
+        dist_y = pos1[1] - pos2[1];
+    return dist_x + dist_y;
+}
+
+bool is_square_reachable(struct board* board, Sint32 pos1[2], Sint32 pos2[2])
+{
+    if (pos2[0] == pos1[0] - 1 && pos2[1] == pos1[1] )
+    {
+        return !board->data[pos1[0]][pos1[1]]->walls[NORTH] && !board->data[pos2[0]][pos2[1]]->occ;
+    }
+    if (pos2[0] == pos1[0] && pos2[1] == pos1[1] + 1)
+    {
+        return !board->data[pos1[0]][pos1[1]]->walls[EAST] && !board->data[pos2[0]][pos2[1]]->occ;
+    }
+    if (pos2[0] == pos1[0] + 1 && pos2[1] == pos1[1])
+    {
+        return !board->data[pos1[0]][pos1[1]]->walls[SOUTH] && !board->data[pos2[0]][pos2[1]]->occ;
+    }
+    if (pos2[0] == pos1[0] && pos2[1] == pos1[1] - 1)
+    {
+        return !board->data[pos1[0]][pos1[1]]->walls[WEST] && !board->data[pos2[0]][pos2[1]]->occ;
+    }
+    return false;
+}
+
+int move_direction(Sint32 pos1[2], Sint32 pos2[2])
+{
+    if (pos2[0] == pos1[0] - 1 && pos2[1] == pos1[1] )
+    {
+        return NORTH;
+    }
+    if (pos2[0] == pos1[0] && pos2[1] == pos1[1] + 1)
+    {
+        return EAST;
+    }
+    if (pos2[0] == pos1[0] + 1 && pos2[1] == pos1[1])
+    {
+        return SOUTH;
+    }
+    if (pos2[0] == pos1[0] && pos2[1] == pos1[1] - 1)
+    {
+        return WEST;
+    }
+    return -1;
+}
+
+Sint32* next_pos(Sint32 pos[2], enum Directions direction)
+{
+    Sint32* nextpos = malloc(2*sizeof(Sint32));
     if (!nextpos)
         return NULL;
     if (direction == NORTH)
@@ -245,7 +343,7 @@ size_t* next_pos(size_t pos[2], enum Directions direction)
     return nextpos;
 }
 
-bool move_piece(struct board* board, size_t pos[2], enum Directions direction, int color)
+bool move_piece(struct board* board, Sint32 pos[2], enum Directions direction, int color)
 {
     if (pos[0] >= board->size || pos[1] >= board->size || board->data[pos[0]][pos[1]]->color != color)
     {
@@ -258,7 +356,7 @@ bool move_piece(struct board* board, size_t pos[2], enum Directions direction, i
         printf("A wall prevents you from moving\n");
         return false;
     }
-    size_t* nextpos = next_pos(pos, direction);
+    Sint32* nextpos = next_pos(pos, direction);
     if (board->data[nextpos[0]][nextpos[1]]->occ)
     {
         printf("Choose an unoccupied goal position\n");
@@ -268,13 +366,13 @@ bool move_piece(struct board* board, size_t pos[2], enum Directions direction, i
     board->data[pos[0]][pos[1]]->occ = false;
     board->data[nextpos[0]][nextpos[1]]->color = color;
     board->data[nextpos[0]][nextpos[1]]->occ = true;
-    //free(nextpos); ????????
+    free(nextpos);
     return true;
 }
 
 /* III - Walls */
 
-bool add_wall(struct board* board, size_t pos[2], enum Directions direction, int color)
+bool add_wall(struct board* board, Sint32 pos[2], enum Directions direction, int color)
 {
     if (pos[0] >= board->size || pos[1] >= board->size || board->data[pos[0]][pos[1]]->color != color)
     {
@@ -288,6 +386,7 @@ bool add_wall(struct board* board, size_t pos[2], enum Directions direction, int
         return false;
     }
     board->data[pos[0]][pos[1]]->walls[direction] = true;
+    board->data[pos[0]][pos[1]]->walls_color[direction] = color;
     adjust_walls(board);
     return true;
 }

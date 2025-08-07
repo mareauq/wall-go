@@ -4,7 +4,7 @@
 CC := clang
 
 # set the compiler flags
-CFLAGS := `sdl2-config --libs --cflags` -g -O0 --std=c99 -Wall -lSDL2_image -lm
+CFLAGS := `sdl2-config --libs --cflags` -fsanitize=address -g -O0 --std=c99 -Wall -lSDL2_image -lm
 # add header files here
 HDRS := go.h
 
